@@ -16,17 +16,21 @@ location = "wieliczka"
 data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-all.csv")
 
+for ind in data.index:
+  if data['windgust'][ind] == "nan" or data['windgust'][ind] == "":
+    print(data['datetime'][ind], data['windgust'][ind])
+
 data.pop("name")
-data.pop("datetime")
-data.pop("precip")
-data.pop("precipprob")
-data.pop("precipcover")
+# data.pop("datetime")
+# data.pop("precip")
+# data.pop("precipprob")
+# data.pop("precipcover")
 data.pop("preciptype")
-data.pop("winddir")
-data.pop("windgust")
+# data.pop("winddir")
+# data.pop("windgust")
 data.pop("severerisk")
-data.pop("snow")
-data.pop("snowdepth")
+# data.pop("snow")
+# data.pop("snowdepth")
 
 print(data.info())
 
@@ -129,16 +133,16 @@ forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
 
 forecast_data.pop("name")
-forecast_data.pop("datetime")
-forecast_data.pop("precip")
-forecast_data.pop("precipprob")
-forecast_data.pop("precipcover")
+# forecast_data.pop("datetime")
+# forecast_data.pop("precip")
+# forecast_data.pop("precipprob")
+# forecast_data.pop("precipcover")
 forecast_data.pop("preciptype")
-forecast_data.pop("winddir")
-forecast_data.pop("windgust")
+# forecast_data.pop("winddir")
+# forecast_data.pop("windgust")
 forecast_data.pop("severerisk")
-forecast_data.pop("snow")
-forecast_data.pop("snowdepth")
+# forecast_data.pop("snow")
+# forecast_data.pop("snowdepth")
 
 print(forecast_data.info())
 
