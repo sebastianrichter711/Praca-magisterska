@@ -3,12 +3,14 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation
+from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU
+from keras.optimizers import SGD
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from numpy import savetxt
+import seaborn as sn
 
 plt.style.use('fivethirtyeight')
 
@@ -16,12 +18,8 @@ location = "wieliczka"
 data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-all.csv")
 
-for ind in data.index:
-  if data['windgust'][ind] == "nan" or data['windgust'][ind] == "":
-    print(data['datetime'][ind], data['windgust'][ind])
-
 data.pop("name")
-# data.pop("datetime")
+data.pop("datetime")
 # data.pop("precip")
 # data.pop("precipprob")
 # data.pop("precipcover")
@@ -29,13 +27,20 @@ data.pop("preciptype")
 # data.pop("winddir")
 # data.pop("windgust")
 data.pop("severerisk")
-# data.pop("snow")
-# data.pop("snowdepth")
+data.pop("snow")
+data.pop("snowdepth")
 
 print(data.info())
 
+print ("\nMissing values :  ", data.isnull().any())
+
 #data plot
 plt.plot(data["energy_produced"])
+plt.show()
+
+copied_data = data
+corr_matrix = data.corr()
+sn.heatmap(corr_matrix, annot=True)
 plt.show()
 
 train_size = int(len(data) * 0.8)
@@ -44,7 +49,7 @@ train, test = data.iloc[0:train_size], data.iloc[train_size:len(data)]
 print(len(train), len(test))
 
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
-'humidity', 'windspeed', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
+'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
 'solarenergy', 'uvindex']
 
 f_transformer = RobustScaler()
@@ -88,6 +93,8 @@ print(X_train.shape, y_train.shape)
 
 model = Sequential()
 
+# LSTM
+
 # model.add(
 #   Bidirectional(
 #     LSTM(
@@ -100,23 +107,44 @@ model = Sequential()
 # model.add(Dropout(rate=0.2))
 # model.add(Dense(units=1))
 
-model.add(LSTM(units=400, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
+# model.add(LSTM(units=400, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
+# model.add(Dropout(0.2))
+# model.add(LSTM(units=400, return_sequences=True))
+# model.add(Dropout(0.2))
+# model.add(LSTM(units=400))
+# model.add(Dropout(0.2))
+# model.add(Dense(units=1))
+
+# model.compile(loss='mean_squared_error', optimizer='adam')
+
+# model.fit(
+#     X_train, y_train,
+#     epochs=75,
+#     batch_size=32,
+#     validation_split=0.1,
+#     shuffle=False
+# )
+
+# GRU
+model = Sequential()
+# First GRU layer with Dropout regularisation
+model.add(GRU(units=400, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
-model.add(LSTM(units=400, return_sequences=True))
+# Second GRU layer
+model.add(GRU(units=400, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
-model.add(LSTM(units=400))
+# Third GRU layer
+model.add(GRU(units=400, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
+# Fourth GRU layer
+model.add(GRU(units=400, activation='tanh'))
+model.add(Dropout(0.2))
+# The output layer
 model.add(Dense(units=1))
-
-model.compile(loss='mean_squared_error', optimizer='adam')
-
-history = model.fit(
-    X_train, y_train,
-    epochs=75,
-    batch_size=32,
-    validation_split=0.1,
-    shuffle=False
-)
+# Compiling the RNN
+model.compile(optimizer='adam',loss='mean_squared_error')
+# Fitting to the training set
+model.fit(X_train,y_train,epochs=75,batch_size=150)
 
 y_pred = model.predict(X_test)
 
@@ -133,7 +161,7 @@ forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
 
 forecast_data.pop("name")
-# forecast_data.pop("datetime")
+forecast_data.pop("datetime")
 # forecast_data.pop("precip")
 # forecast_data.pop("precipprob")
 # forecast_data.pop("precipcover")
@@ -141,15 +169,15 @@ forecast_data.pop("preciptype")
 # forecast_data.pop("winddir")
 # forecast_data.pop("windgust")
 forecast_data.pop("severerisk")
-# forecast_data.pop("snow")
-# forecast_data.pop("snowdepth")
+forecast_data.pop("snow")
+forecast_data.pop("snowdepth")
 
 print(forecast_data.info())
 
 print(len(forecast_data))
 
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
-'humidity', 'windspeed', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
+'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
 'solarenergy', 'uvindex']
 
 f_transformer_2 = RobustScaler()
