@@ -93,38 +93,6 @@ print(X_train.shape, y_train.shape)
 
 model = Sequential()
 
-# LSTM
-
-# model.add(
-#   Bidirectional(
-#     LSTM(
-#       units=128,
-#       input_shape=(X_train.shape[1], X_train.shape[2])
-#     )
-#   )
-# )
-
-# model.add(Dropout(rate=0.2))
-# model.add(Dense(units=1))
-
-# model.add(LSTM(units=400, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
-# model.add(Dropout(0.2))
-# model.add(LSTM(units=400, return_sequences=True))
-# model.add(Dropout(0.2))
-# model.add(LSTM(units=400))
-# model.add(Dropout(0.2))
-# model.add(Dense(units=1))
-
-# model.compile(loss='mean_squared_error', optimizer='adam')
-
-# model.fit(
-#     X_train, y_train,
-#     epochs=75,
-#     batch_size=32,
-#     validation_split=0.1,
-#     shuffle=False
-# )
-
 # GRU
 model = Sequential()
 # First GRU layer with Dropout regularisation
