@@ -8,7 +8,7 @@ from keras.optimizers import SGD
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 from numpy import savetxt
 import seaborn as sn
 
@@ -38,7 +38,6 @@ print ("\nMissing values :  ", data.isnull().any())
 plt.plot(data["energy_produced"])
 plt.show()
 
-copied_data = data
 corr_matrix = data.corr()
 sn.heatmap(corr_matrix, annot=True)
 plt.show()
@@ -91,8 +90,6 @@ X_test, y_test = create_dataset(test.loc[:, f_columns], test.energy_produced, ti
 
 print(X_train.shape, y_train.shape)
 
-model = Sequential()
-
 # GRU
 model = Sequential()
 # First GRU layer with Dropout regularisation
@@ -124,6 +121,21 @@ plt.plot(y_test_inv.flatten(), label='true')
 plt.plot(y_pred_inv.flatten(), label='predicted')
 plt.legend()
 plt.show()
+
+mse = mean_squared_error(y_test_inv, y_pred_inv)
+print("Mean square error: " + str(mse))
+mae = mean_absolute_error(y_test_inv, y_pred_inv)
+print("Mean absolute error: " + str(mae))
+rmse = math.sqrt(mean_squared_error(y_test_inv, y_pred_inv))
+print("Root mean square error: " + str(rmse))
+
+def mape_function(y_test, pred):
+    y_test, pred = np.array(y_test), np.array(pred)
+    mape = np.mean(np.abs((y_test - pred) / y_test))
+    return mape
+
+mape = mape_function(y_test_inv, y_pred_inv)
+print("Mean Absolute Percentage Error: " + str(mape))
 
 forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")

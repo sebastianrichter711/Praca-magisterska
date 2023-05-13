@@ -3,37 +3,20 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU
+from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU, Conv1D
 from keras.optimizers import SGD
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+from numpy import savetxt
 import seaborn as sn
-from math import sqrt
-import datetime
-import matplotlib.dates as mdates
-
-def create_list_of_dates(dates):
-  list_of_dates = []
-  for d in dates:
-    splitted_date = d.split("-")
-    list_of_dates.append(splitted_date)
-  return list_of_dates
 
 plt.style.use('fivethirtyeight')
 
 location = "wieliczka"
 data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-all.csv")
-
-train_size = int(len(data) * 0.8)
-test_size = len(data) - train_size
-train, test = data.iloc[0:train_size], data.iloc[train_size:len(data)]
-print(len(train), len(test))
-
-list_of_dates = create_list_of_dates(data["datetime"])
-list_of_test_dates = create_list_of_dates(test["datetime"])
 
 data.pop("name")
 data.pop("datetime")
@@ -51,19 +34,18 @@ print(data.info())
 
 print ("\nMissing values :  ", data.isnull().any())
 
-x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_dates]
-
-fig, ax = plt.subplots()
-ax.plot(x, data["energy_produced"])
-ax.xaxis.set_major_locator(mdates.DayLocator(interval=365))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y/%m/%d'))
-plt.ylabel("Energia wyprodukowana [kWh]")
-plt.title("Wykres produkcji energii elektrycznej z instalacji PV w Wieliczce")
+#data plot
+plt.plot(data["energy_produced"])
 plt.show()
 
-sn.heatmap(data.corr(), annot=True)
-plt.title("Macierz korelacji")
+corr_matrix = data.corr()
+sn.heatmap(corr_matrix, annot=True)
 plt.show()
+
+train_size = int(len(data) * 0.8)
+test_size = len(data) - train_size
+train, test = data.iloc[0:train_size], data.iloc[train_size:len(data)]
+print(len(train), len(test))
 
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
 'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
@@ -109,41 +91,16 @@ X_test, y_test = create_dataset(test.loc[:, f_columns], test.energy_produced, ti
 print(X_train.shape, y_train.shape)
 
 model = Sequential()
-
-# LSTM
-
-# model.add(
-#   Bidirectional(
-#     LSTM(
-#       units=128,
-#       input_shape=(X_train.shape[1], X_train.shape[2])
-#     )
-#   )
-# )
-
-# model.add(Dropout(rate=0.2))
-# model.add(Dense(units=1))
-
-model.add(LSTM(units=500, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
-model.add(Dropout(0.2))
-model.add(LSTM(units=500, return_sequences=True))
-model.add(Dropout(0.2))
-model.add(LSTM(units=500))
-model.add(Dropout(0.2))
-model.add(Dense(units=1))
-
-model.compile(loss='mean_squared_error', optimizer='adam')
-
-model.fit(
-    X_train, y_train,
-    epochs=75,
-    batch_size=32,
-    validation_split=0.1,
-    shuffle=False
-)
+model.add(Conv1D(64, 2, activation="relu", input_shape=(X_train.shape[1],X_train.shape[2])))
+model.add(Dense(16, activation="relu"))
+model.add(MaxPooling1D())
+model.add(Flatten())
+model.add(Dense(3, activation = 'softmax'))
+model.compile(loss = 'sparse_categorical_crossentropy', optimizer = "adam", metrics = ['accuracy'])
+model.fit(X_train, y_train, batch_size=16, epochs=100, verbose=0)
 
 acc = model.evaluate(X_test, y_test)
-print("test loss, test acc:", acc)
+print("Loss:", acc[0], " Accuracy:", acc[1])
 
 y_pred = model.predict(X_test)
 
@@ -151,24 +108,17 @@ y_train_inv = en_transformer.inverse_transform(y_train.reshape(-1,1))
 y_test_inv = en_transformer.inverse_transform(y_test.reshape(-1,1))
 y_pred_inv = en_transformer.inverse_transform(y_pred)
 
-fig, ax = plt.subplots()
-x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_test_dates]
-
-print(len(y_test_inv))
-print(len(y_pred_inv))
-
-plt.plot_date(x, y_test_inv.flatten(), label='true')
-plt.plot_date(x, y_pred_inv.flatten(), label='predicted')
-ax.xaxis.set_major_locator(mdates.DayLocator(interval=50))
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y/%m/%d'))
-plt.ylabel("Energia wyprodukowana [kWh]")
-plt.title("Wykres danych testowych")
+plt.plot(y_test_inv.flatten(), label='true')
+plt.plot(y_pred_inv.flatten(), label='predicted')
 plt.legend()
 plt.show()
 
+print(y_test_inv)
+print(y_pred_inv)
+
 print("Mean square error: " + str(mean_squared_error(y_test_inv, y_pred_inv)))
 print("Mean absolute error: " + str(mean_absolute_error(y_test_inv, y_pred_inv)))
-print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
+print("Root mean square error: " + str(math.sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
 
 def mape_function(y_test, pred):
     y_test, pred = np.array(y_test), np.array(pred)
@@ -179,8 +129,6 @@ print("Mean Absolute Percentage Error: " + str(mape_function(y_test_inv, y_pred_
 
 forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
-
-list_of_forecast_dates = create_list_of_dates(forecast_data["datetime"])
 
 forecast_data.pop("name")
 forecast_data.pop("datetime")
@@ -212,7 +160,7 @@ forecast_data.loc[:, f_columns] = f_transformer_2.transform(
 
 en_transformer_2 = RobustScaler()
 
-real_data_for_chart = forecast_data['energy_produced']
+data = forecast_data['energy_produced']
 
 en_transformer_2 = en_transformer_2.fit(forecast_data[['energy_produced']])
 
@@ -232,10 +180,8 @@ print(y_pred_forecast_inv)
 #print("Dane rzeczywiste")
 #print(y_data_real_inv)
 
-plt.plot(real_data_for_chart, label='Dane rzeczywiste')
+plt.plot(data, label='Dane rzeczywiste')
 plt.plot(y_pred_forecast_inv.flatten(), label='Prognoza')
-plt.ylabel("Energia wyprodukowana [kWh]")
-plt.title("Prognoza produkcji energii elektrycznej z instalacji PV w Wieliczce na kwiecień 2023")
 plt.legend()
 plt.show()
 
