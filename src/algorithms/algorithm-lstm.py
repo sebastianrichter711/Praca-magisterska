@@ -153,7 +153,7 @@ model.compile(loss='mean_squared_error', optimizer='adam')
 
 model.fit(
     X_train, y_train,
-    epochs=100,
+    epochs=75,
     batch_size=32,
     validation_split=0.1,
     shuffle=False
@@ -174,7 +174,7 @@ x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_test_date
 print(len(y_test_inv))
 print(len(y_pred_inv))
 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=100))
 plt.plot(x, y_test_inv.flatten(),label='Dane rzeczywiste')
 plt.plot(x, y_pred_inv.flatten(),label='Prognoza')
@@ -251,7 +251,7 @@ print(y_pred_forecast_inv)
 
 fig, ax = plt.subplots()
 x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_forecast_dates]
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=10))
 plt.plot(x, real_data_for_chart, label='Dane rzeczywiste')
 plt.plot(x, y_pred_forecast_inv.flatten(), label='Prognoza')
