@@ -142,7 +142,12 @@ optimizer = RMSprop(0.001)
 model.compile(loss='mse',optimizer=optimizer,metrics=['mae'])
 
 # fit network
-model.fit(X_train, y_train, epochs=500, validation_split=0.2, verbose=1)
+history = model.fit(X_train, y_train, epochs=500, validation_split=0.2, verbose=1)
+
+plt.plot(history.history['loss'], label='train')
+plt.plot(history.history['val_loss'], label='validation')
+plt.legend()
+plt.show()
 
 acc = model.evaluate(X_test, y_test)
 print("test loss, test acc:", acc)
@@ -227,9 +232,7 @@ X_forecast = X_forecast.reshape((X_forecast.shape[0], X_forecast.shape[1], 1))
 print(X_forecast.shape)
 
 y_pred_forecast = model.predict(X_forecast)
-
 y_pred_forecast_inv = en_transformer_2.inverse_transform(y_pred_forecast)
-#y_data_real_inv = en_transformer_2.inverse_transform(forecast_data.energy_produced)
 
 print("Prognoza")
 print(y_pred_forecast_inv)

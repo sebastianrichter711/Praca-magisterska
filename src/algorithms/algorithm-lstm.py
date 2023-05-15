@@ -8,7 +8,7 @@ from keras.optimizers import SGD
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix
+from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score
 import seaborn as sn
 from math import sqrt
 import datetime
@@ -111,14 +111,14 @@ test['energy_produced'] = en_transformer.transform(test[['energy_produced']])
 X_train, y_train = train.loc[:, f_columns].to_numpy(), train.loc[:, "energy_produced"].to_numpy()
 X_test, y_test = test.loc[:, f_columns].to_numpy(), test.loc[:, "energy_produced"].to_numpy()
 
-print("Train")
-print(train)
-print("Test")
-print(test)
-print("Enrgia wyporduk")
-print(y_train)
-print("Enrgia wyporduk(test)")
-print(y_test)
+# print("Train")
+# print(train)
+# print("Test")
+# print(test)
+# print("Enrgia wyporduk")
+# print(y_train)
+# print("Enrgia wyporduk(test)")
+# print(y_test)
 
 X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
 X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
@@ -151,13 +151,18 @@ model.add(Dense(units=1))
 
 model.compile(loss='mean_squared_error', optimizer='adam')
 
-model.fit(
+history = model.fit(
     X_train, y_train,
     epochs=75,
     batch_size=32,
     validation_split=0.1,
     shuffle=False
 )
+
+plt.plot(history.history['loss'], label='train')
+plt.plot(history.history['val_loss'], label='validation')
+plt.legend()
+plt.show()
 
 acc = model.evaluate(X_test, y_test)
 print("test loss, test acc:", acc)
@@ -251,9 +256,7 @@ X_forecast = X_forecast.reshape((X_forecast.shape[0], 1, X_forecast.shape[1]))
 print(X_forecast.shape)
 
 y_pred_forecast = model.predict(X_forecast)
-
 y_pred_forecast_inv = en_transformer_2.inverse_transform(y_pred_forecast)
-#y_data_real_inv = en_transformer_2.inverse_transform(forecast_data.energy_produced)
 
 print("Prognoza")
 print(y_pred_forecast_inv)
