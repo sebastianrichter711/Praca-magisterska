@@ -8,7 +8,7 @@ from keras.optimizers import SGD
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix
 import seaborn as sn
 from math import sqrt
 import datetime
@@ -174,6 +174,15 @@ x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_test_date
 print(len(y_test_inv))
 print(len(y_pred_inv))
 
+test = []
+pred = []
+
+for i in range(0, len(y_test_inv)):
+  test.append(y_test_inv[i][0])
+
+for i in range(0, len(y_pred_inv)):
+  pred.append(y_pred_inv[i][0])
+
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=100))
 plt.plot(x, y_test_inv.flatten(),label='Dane rzeczywiste')
@@ -184,16 +193,16 @@ plt.title("Wykres danych testowych")
 plt.legend()
 plt.show()
 
-print("Mean square error: " + str(mean_squared_error(y_test_inv, y_pred_inv)))
-print("Mean absolute error: " + str(mean_absolute_error(y_test_inv, y_pred_inv)))
-print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
+print("Mean square error: " + str(mean_squared_error(test, pred)))
+print("Mean absolute error: " + str(mean_absolute_error(test, pred)))
+print("Root mean square error: " + str(sqrt(mean_squared_error(test, pred))))
 
 def mape_function(y_test, pred):
     y_test, pred = np.array(y_test), np.array(pred)
     mape = np.mean(np.abs((y_test - pred) / y_test))
     return mape
 
-print("Mean Absolute Percentage Error: " + str(mape_function(y_test_inv, y_pred_inv)))
+print("Mean Absolute Percentage Error: " + str(mape_function(test, pred)))
 
 forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")

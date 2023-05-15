@@ -2,13 +2,14 @@ import math
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
+from keras import Input
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU, Conv1D,
-from keras.optimizers import SGD
+from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU, Conv1D, MaxPooling1D, Flatten
+from keras.optimizers import SGD, RMSprop
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix
 import seaborn as sn
 from math import sqrt
 import datetime
@@ -120,19 +121,28 @@ print(y_train)
 print("Enrgia wyporduk(test)")
 print(y_test)
 
-X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
-X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
+X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
+X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
 
 print(X_train.shape, y_train.shape)
 
-model = Sequential()
-model.add(Conv1D(64, 2, activation="relu", input_shape=(X_train.shape[0],X_train.shape[2])))
-model.add(Dense(16, activation="relu"))
-model.add(MaxPooling1D())
+model = Sequential(name="model_conv1D")
+model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
+model.add(Conv1D(filters=64, kernel_size=7, activation='relu', name="Conv1D_1"))
+model.add(Dropout(0.5))
+model.add(Conv1D(filters=32, kernel_size=3, activation='relu', name="Conv1D_2"))
+model.add(Conv1D(filters=16, kernel_size=2, activation='relu', name="Conv1D_3"))
+model.add(MaxPooling1D(pool_size=2, name="MaxPooling1D"))
 model.add(Flatten())
-model.add(Dense(3, activation = 'softmax'))
-model.compile(loss = 'sparse_categorical_crossentropy', optimizer = "adam", metrics = ['accuracy'])
-model.fit(X_train, y_train, batch_size=16, epochs=100, verbose=0)
+model.add(Dense(32, activation='relu', name="Dense_1"))
+model.add(Dense(1, name="Dense_2"))
+
+optimizer = RMSprop(0.001)
+
+model.compile(loss='mse',optimizer=optimizer,metrics=['mae'])
+
+# fit network
+model.fit(X_train, y_train, epochs=500, validation_split=0.2, verbose=1)
 
 acc = model.evaluate(X_test, y_test)
 print("test loss, test acc:", acc)
@@ -212,7 +222,7 @@ en_transformer_2 = en_transformer_2.fit(forecast_data[['energy_produced']])
 forecast_data['energy_produced'] = en_transformer_2.transform(forecast_data[['energy_produced']])
 
 X_forecast, y_forecast = forecast_data.loc[:, f_columns].to_numpy(), forecast_data.loc[:, "energy_produced"].to_numpy()
-X_forecast = X_forecast.reshape((X_forecast.shape[0], 1, X_forecast.shape[1]))
+X_forecast = X_forecast.reshape((X_forecast.shape[0], X_forecast.shape[1], 1))
 
 print(X_forecast.shape)
 
