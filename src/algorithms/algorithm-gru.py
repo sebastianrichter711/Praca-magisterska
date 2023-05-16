@@ -128,26 +128,26 @@ print(X_train.shape, y_train.shape)
 # GRU
 model = Sequential()
 # First GRU layer with Dropout regularisation
-model.add(GRU(units=500, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), activation='tanh'))
+model.add(GRU(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
 # Second GRU layer
-model.add(GRU(units=500, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
+model.add(GRU(units=50, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
 # Third GRU layer
-model.add(GRU(units=500, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
+model.add(GRU(units=50, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2]), activation='tanh'))
 model.add(Dropout(0.2))
 # Fourth GRU layer
-model.add(GRU(units=500, activation='tanh'))
+model.add(GRU(units=50, activation='tanh'))
 model.add(Dropout(0.2))
 # The output layer
 model.add(Dense(units=1))
 # Compiling the RNN
-model.compile(optimizer='adam',loss='mean_squared_error')
+model.compile(optimizer=SGD(lr=0.01, decay=1e-7, momentum=0.9, nesterov=False),loss='mean_squared_error')
 # Fitting to the training set
-history = model.fit(X_train, y_train, epochs=75, batch_size=32, validation_split=0.1, shuffle=False)
+history = model.fit(X_train,y_train,epochs=50,batch_size=150)
 
 plt.plot(history.history['loss'], label='train')
-plt.plot(history.history['val_loss'], label='validation')
+#plt.plot(history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
 

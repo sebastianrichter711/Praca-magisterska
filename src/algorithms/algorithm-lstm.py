@@ -141,26 +141,45 @@ model = Sequential()
 # model.add(Dropout(rate=0.2))
 # model.add(Dense(units=1))
 
-model.add(LSTM(units=500, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
+# model.add(LSTM(units=500, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
+# model.add(Dropout(0.2))
+# model.add(LSTM(units=500, return_sequences=True))
+# model.add(Dropout(0.2))
+# model.add(LSTM(units=500))
+# model.add(Dropout(0.2))
+# model.add(Dense(units=1))
+
+# model.compile(loss='mean_squared_error', optimizer='adam')
+
+# history = model.fit(
+#     X_train, y_train,
+#     epochs=75,
+#     batch_size=32,
+#     validation_split=0.1,
+#     shuffle=False
+# )
+
+model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2])))
 model.add(Dropout(0.2))
-model.add(LSTM(units=500, return_sequences=True))
+# Second LSTM layer
+model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.2))
-model.add(LSTM(units=500))
+# Third LSTM layer
+model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.2))
+# Fourth LSTM layer
+model.add(LSTM(units=50))
+model.add(Dropout(0.2))
+# The output layer
 model.add(Dense(units=1))
 
-model.compile(loss='mean_squared_error', optimizer='adam')
-
-history = model.fit(
-    X_train, y_train,
-    epochs=75,
-    batch_size=32,
-    validation_split=0.1,
-    shuffle=False
-)
+# Compiling the RNN
+model.compile(optimizer='rmsprop',loss='mean_squared_error')
+# Fitting to the training set
+history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
 plt.plot(history.history['loss'], label='train')
-plt.plot(history.history['val_loss'], label='validation')
+# plt.plot(history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
 
