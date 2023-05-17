@@ -4,12 +4,13 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from keras import Input
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU, Conv1D, MaxPooling1D, Flatten
-from keras.optimizers import SGD, RMSprop
+from keras.layers import InputLayer, Dense, LSTM, Dropout, Bidirectional, Activation, GRU, Conv1D, MaxPooling1D, Flatten
+from keras.optimizers import SGD, RMSprop, Adam
+from keras.metrics import Accuracy, RootMeanSquaredError
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, mean_absolute_error, confusion_matrix
 import seaborn as sn
 from math import sqrt
 import datetime
@@ -126,31 +127,39 @@ X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
 
 print(X_train.shape, y_train.shape)
 
-model = Sequential(name="model_conv1D")
-model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
-model.add(Conv1D(filters=64, kernel_size=7, activation='relu', name="Conv1D_1"))
-model.add(Dropout(0.5))
-model.add(Conv1D(filters=32, kernel_size=3, activation='relu', name="Conv1D_2"))
-model.add(Conv1D(filters=16, kernel_size=2, activation='relu', name="Conv1D_3"))
-model.add(MaxPooling1D(pool_size=2, name="MaxPooling1D"))
+# model = Sequential(name="model_conv1D")
+# model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
+# model.add(Conv1D(filters=64, kernel_size=7, activation='relu', name="Conv1D_1"))
+# model.add(Dropout(0.5))
+# model.add(Conv1D(filters=32, kernel_size=3, activation='relu', name="Conv1D_2"))
+# model.add(Conv1D(filters=16, kernel_size=2, activation='relu', name="Conv1D_3"))
+# model.add(MaxPooling1D(pool_size=2, name="MaxPooling1D"))
+# model.add(Flatten())
+# model.add(Dense(32, activation='relu', name="Dense_1"))
+# model.add(Dense(1, name="Dense_2"))
+
+# optimizer = RMSprop(0.001)
+
+# model.compile(loss='mse',optimizer=optimizer, metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
+
+model = Sequential()
+model.add(InputLayer((X_train.shape[1],X_train.shape[2])))
+model.add(Conv1D(64, kernel_size=2))
 model.add(Flatten())
-model.add(Dense(32, activation='relu', name="Dense_1"))
-model.add(Dense(1, name="Dense_2"))
-
-optimizer = RMSprop(0.001)
-
-model.compile(loss='mse',optimizer=optimizer,metrics=['mae'])
-
-# fit network
-history = model.fit(X_train, y_train, epochs=500, validation_split=0.2, verbose=1)
+model.add(Dense(8, 'relu'))
+model.add(Dense(1, 'linear'))
+model.compile(loss='mse', optimizer=Adam(learning_rate=0.0001), metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
+# fit model
+history = model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1)
 
 plt.plot(history.history['loss'], label='train')
-plt.plot(history.history['val_loss'], label='validation')
+#plt.plot(history.history['val_loss'], label='validation')
 plt.legend()
 plt.show()
 
 acc = model.evaluate(X_test, y_test)
-print("test loss, test acc:", acc)
+print(model.metrics_names)
+print("test loss:", acc)
 
 y_pred = model.predict(X_test)
 
@@ -177,13 +186,7 @@ plt.show()
 print("Mean square error: " + str(mean_squared_error(y_test_inv, y_pred_inv)))
 print("Mean absolute error: " + str(mean_absolute_error(y_test_inv, y_pred_inv)))
 print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
-
-def mape_function(y_test, pred):
-    y_test, pred = np.array(y_test), np.array(pred)
-    mape = np.mean(np.abs((y_test - pred) / y_test))
-    return mape
-
-print("Mean Absolute Percentage Error: " + str(mape_function(y_test_inv, y_pred_inv)))
+print("Mean Absolute Percentage Error: " + str(mean_absolute_percentage_error(y_test_inv, y_pred_inv)))
 
 forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")

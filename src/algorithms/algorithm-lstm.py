@@ -5,10 +5,11 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Dropout, Bidirectional, Activation, GRU
 from keras.optimizers import SGD
+from keras.metrics import Accuracy, RootMeanSquaredError
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, mean_absolute_error, confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score
 import seaborn as sn
 from math import sqrt
 import datetime
@@ -160,21 +161,21 @@ model = Sequential()
 # )
 
 model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2])))
-model.add(Dropout(0.2))
+model.add(Dropout(0.5))
 # Second LSTM layer
 model.add(LSTM(units=50, return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.5))
 # Third LSTM layer
 model.add(LSTM(units=50, return_sequences=True))
-model.add(Dropout(0.2))
+model.add(Dropout(0.5))
 # Fourth LSTM layer
 model.add(LSTM(units=50))
-model.add(Dropout(0.2))
+model.add(Dropout(0.5))
 # The output layer
 model.add(Dense(units=1))
 
 # Compiling the RNN
-model.compile(optimizer='rmsprop',loss='mean_squared_error')
+model.compile(optimizer='rmsprop',loss='mean_squared_error', metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
 # Fitting to the training set
 history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
@@ -184,7 +185,8 @@ plt.legend()
 plt.show()
 
 acc = model.evaluate(X_test, y_test)
-print("test loss, test acc:", acc)
+print(model.metrics_names)
+print("test loss:", acc)
 
 y_pred = model.predict(X_test)
 
@@ -217,16 +219,10 @@ plt.title("Wykres danych testowych")
 plt.legend()
 plt.show()
 
-print("Mean square error: " + str(mean_squared_error(test, pred)))
-print("Mean absolute error: " + str(mean_absolute_error(test, pred)))
-print("Root mean square error: " + str(sqrt(mean_squared_error(test, pred))))
-
-def mape_function(y_test, pred):
-    y_test, pred = np.array(y_test), np.array(pred)
-    mape = np.mean(np.abs((y_test - pred) / y_test))
-    return mape
-
-print("Mean Absolute Percentage Error: " + str(mape_function(test, pred)))
+print("Mean square error: " + str(mean_squared_error(y_test_inv, y_pred_inv)))
+print("Mean absolute error: " + str(mean_absolute_error(y_test_inv, y_pred_inv)))
+print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
+print("Mean Absolute Percentage Error: " + str(mean_absolute_percentage_error(y_test_inv, y_pred_inv)))
 
 forecast_data = pd.read_csv(
     "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
