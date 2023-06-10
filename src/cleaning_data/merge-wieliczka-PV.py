@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+import csv
 
 plt.style.use('fivethirtyeight')
-
-import csv
 
 data = []
 

@@ -38,12 +38,7 @@ list_of_test_dates = create_list_of_dates(test["datetime"])
 
 data.pop("name")
 data.pop("datetime")
-# data.pop("precip")
-# data.pop("precipprob")
-# data.pop("precipcover")
 data.pop("preciptype")
-# data.pop("winddir")
-# data.pop("windgust")
 data.pop("severerisk")
 data.pop("snow")
 data.pop("snowdepth")
@@ -175,7 +170,7 @@ model.add(Dropout(0.5))
 model.add(Dense(units=1))
 
 # Compiling the RNN
-model.compile(optimizer='rmsprop',loss='mean_squared_error', metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
+model.compile(optimizer='rmsprop',loss='mean_squared_error', metrics=['mse', 'mae', RootMeanSquaredError()])
 # Fitting to the training set
 history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
