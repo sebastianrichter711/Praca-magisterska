@@ -174,8 +174,7 @@ model.compile(optimizer='rmsprop',loss='mean_squared_error', metrics=['mse', 'ma
 # Fitting to the training set
 history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
-plt.plot(history.history['loss'], label='train')
-# plt.plot(history.history['val_loss'], label='validation')
+plt.plot(history.history['loss'], label='strata')
 plt.legend()
 plt.show()
 
@@ -226,12 +225,7 @@ list_of_forecast_dates = create_list_of_dates(forecast_data["datetime"])
 
 forecast_data.pop("name")
 forecast_data.pop("datetime")
-# forecast_data.pop("precip")
-# forecast_data.pop("precipprob")
-# forecast_data.pop("precipcover")
 forecast_data.pop("preciptype")
-# forecast_data.pop("winddir")
-# forecast_data.pop("windgust")
 forecast_data.pop("severerisk")
 forecast_data.pop("snow")
 forecast_data.pop("snowdepth")

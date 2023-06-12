@@ -144,9 +144,9 @@ model.add(Dropout(0.2))
 model.add(Dense(units=1))
 # Compiling the RNN
 model.compile(optimizer=SGD(lr=0.01, decay=1e-7, momentum=0.9, nesterov=False),loss='mean_squared_error',
-metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
+metrics=['mse', 'mae', RootMeanSquaredError()])
 # Fitting to the training set
-history = model.fit(X_train,y_train,epochs=50,batch_size=150)
+history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
 plt.plot(history.history['loss'], label='train')
 #plt.plot(history.history['val_loss'], label='validation')

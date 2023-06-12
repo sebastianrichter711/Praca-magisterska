@@ -148,9 +148,9 @@ model.add(Conv1D(64, kernel_size=2))
 model.add(Flatten())
 model.add(Dense(8, 'relu'))
 model.add(Dense(1, 'linear'))
-model.compile(loss='mse', optimizer=Adam(learning_rate=0.0001), metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
+model.compile(loss='mse', optimizer=Adam(learning_rate=0.0001), metrics=['mse', 'mae', RootMeanSquaredError()])
 # fit model
-history = model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1)
+history = model.fit(X_train, y_train, epochs=40, batch_size=32)
 
 plt.plot(history.history['loss'], label='train')
 #plt.plot(history.history['val_loss'], label='validation')
