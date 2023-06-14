@@ -4,14 +4,6 @@ import gzip
 from os import path
 import datetime
 
-# location = "apa"
-# file = open('C:/Studia/Praca-magisterska/src/merged/' + location + '-merged.csv')
-# csvreader = csv.reader(file)
-# rows = []
-# for row in csvreader:
-#     if row != []:
-#         rows.append(row)
-
 rows = []
 with open('D:/Studia/Praca-magisterska/dane-z-PV/wieliczka/wieliczka-PV.txt') as f:
     rows = f.readlines()

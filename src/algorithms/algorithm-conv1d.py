@@ -39,12 +39,7 @@ list_of_test_dates = create_list_of_dates(test["datetime"])
 
 data.pop("name")
 data.pop("datetime")
-# data.pop("precip")
-# data.pop("precipprob")
-# data.pop("precipcover")
 data.pop("preciptype")
-# data.pop("winddir")
-# data.pop("windgust")
 data.pop("severerisk")
 data.pop("snow")
 data.pop("snowdepth")
@@ -67,48 +62,33 @@ sn.heatmap(data.corr(), annot=True)
 plt.title("Macierz korelacji")
 plt.show()
 
+# f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
+# 'humidity', 'precip', 'precipprob', 'precipcover', 'sealevelpressure', 'cloudcover', 'solarradiation',
+# 'uvindex']
+
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
 'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
 'solarenergy', 'uvindex']
 
-f_transformer = RobustScaler()
+features_transformer = RobustScaler()
 
-f_transformer = f_transformer.fit(train[f_columns].to_numpy())
+features_transformer = features_transformer.fit(train[f_columns].to_numpy())
 
-train.loc[:, f_columns] = f_transformer.transform(
+train.loc[:, f_columns] = features_transformerr.transform(
   train[f_columns].to_numpy()
 )
 
-test.loc[:, f_columns] = f_transformer.transform(
+test.loc[:, f_columns] = features_transformer.transform(
   test[f_columns].to_numpy()
 )
 
-en_transformer = RobustScaler()
+energy_values_transformer = RobustScaler()
 
-en_transformer = en_transformer.fit(train[['energy_produced']])
+energy_values_transformer = energy_values_transformer.fit(train[['energy_produced']])
 
-train['energy_produced'] = en_transformer.transform(train[['energy_produced']])
+train['energy_produced'] = energy_values_transformer.transform(train[['energy_produced']])
 
-test['energy_produced'] = en_transformer.transform(test[['energy_produced']])
-
-# def create_dataset(X, y, time_steps=1):
-#     Xs, ys = [], []
-#     for i in range(len(X) - time_steps):
-#         v = X.iloc[i:(i + time_steps)].values
-#         Xs.append(v)
-#         ys.append(y.iloc[i + time_steps])
-#     return np.array(Xs), np.array(ys)
-
-# time_steps = 7
-
-# # reshape to [samples, time_steps, n_features]
-# print(train.head(10))
-# print(train.loc[:,["tempmax", "tempmin"]])
-
-# X_train, y_train = create_dataset(train.loc[:, f_columns], train.energy_produced, time_steps)
-# X_test, y_test = create_dataset(test.loc[:, f_columns], test.energy_produced, time_steps)
-
-# print(X_train.shape, y_train.shape)
+test['energy_produced'] = energy_values_transformer.transform(test[['energy_produced']])
 
 X_train, y_train = train.loc[:, f_columns].to_numpy(), train.loc[:, "energy_produced"].to_numpy()
 X_test, y_test = test.loc[:, f_columns].to_numpy(), test.loc[:, "energy_produced"].to_numpy()
@@ -127,33 +107,25 @@ X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
 
 print(X_train.shape, y_train.shape)
 
-# model = Sequential(name="model_conv1D")
-# model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
-# model.add(Conv1D(filters=64, kernel_size=7, activation='relu', name="Conv1D_1"))
-# model.add(Dropout(0.5))
-# model.add(Conv1D(filters=32, kernel_size=3, activation='relu', name="Conv1D_2"))
-# model.add(Conv1D(filters=16, kernel_size=2, activation='relu', name="Conv1D_3"))
-# model.add(MaxPooling1D(pool_size=2, name="MaxPooling1D"))
-# model.add(Flatten())
-# model.add(Dense(32, activation='relu', name="Dense_1"))
-# model.add(Dense(1, name="Dense_2"))
-
-# optimizer = RMSprop(0.001)
-
-# model.compile(loss='mse',optimizer=optimizer, metrics=['mse', 'mae', RootMeanSquaredError(), 'mape'])
-
 model = Sequential()
-model.add(InputLayer((X_train.shape[1],X_train.shape[2])))
-model.add(Conv1D(64, kernel_size=2))
+model.add(Input(shape=(X_train.shape[1],X_train.shape[2])))
+model.add(Conv1D(filters=64, kernel_size=7, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
+model.add(Conv1D(filters=16, kernel_size=2, activation='relu'))
+model.add(MaxPooling1D(pool_size=2))
 model.add(Flatten())
-model.add(Dense(8, 'relu'))
-model.add(Dense(1, 'linear'))
-model.compile(loss='mse', optimizer=Adam(learning_rate=0.0001), metrics=['mse', 'mae', RootMeanSquaredError()])
-# fit model
-history = model.fit(X_train, y_train, epochs=40, batch_size=32)
+model.add(Dense(32, activation='relu'))
+model.add(Dense(X_train.shape[2]))
+
+optimizer = RMSprop(0.001)
+
+model.compile(loss='mse', optimizer=optimizer, metrics=['mse', 'mae', RootMeanSquaredError()])
+
+history = model.fit(X_train, y_train,epochs=500,batch_size=32)
 
 plt.plot(history.history['loss'], label='train')
-#plt.plot(history.history['val_loss'], label='validation')
+plt.title("Wykres funkcji straty")
 plt.legend()
 plt.show()
 
@@ -163,9 +135,9 @@ print("test loss:", acc)
 
 y_pred = model.predict(X_test)
 
-y_train_inv = en_transformer.inverse_transform(y_train.reshape(-1,1))
-y_test_inv = en_transformer.inverse_transform(y_test.reshape(-1,1))
-y_pred_inv = en_transformer.inverse_transform(y_pred)
+y_train_inv = energy_values_transformer.inverse_transform(y_train.reshape(-1,1))
+y_test_inv = energy_values_transformer.inverse_transform(y_test.reshape(-1,1))
+y_pred_inv = energy_values_transformer.inverse_transform(y_pred)
 
 fig, ax = plt.subplots()
 x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_test_dates]
@@ -189,18 +161,13 @@ print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pre
 print("Mean Absolute Percentage Error: " + str(mean_absolute_percentage_error(y_test_inv, y_pred_inv)))
 
 forecast_data = pd.read_csv(
-    "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
+    "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast-32.csv")
 
 list_of_forecast_dates = create_list_of_dates(forecast_data["datetime"])
 
 forecast_data.pop("name")
 forecast_data.pop("datetime")
-# forecast_data.pop("precip")
-# forecast_data.pop("precipprob")
-# forecast_data.pop("precipcover")
 forecast_data.pop("preciptype")
-# forecast_data.pop("winddir")
-# forecast_data.pop("windgust")
 forecast_data.pop("severerisk")
 forecast_data.pop("snow")
 forecast_data.pop("snowdepth")
@@ -209,25 +176,29 @@ print(forecast_data.info())
 
 print(len(forecast_data))
 
+# f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
+# 'humidity', 'precip', 'precipprob', 'precipcover', 'sealevelpressure', 'cloudcover', 'solarradiation',
+# 'uvindex']
+
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
 'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
 'solarenergy', 'uvindex']
 
-f_transformer_2 = RobustScaler()
+features_transformer_2 = RobustScaler()
 
-f_transformer_2 = f_transformer_2.fit(forecast_data[f_columns].to_numpy())
+features_transformer_2 = features_transformer_2.fit(forecast_data[f_columns].to_numpy())
 
-forecast_data.loc[:, f_columns] = f_transformer_2.transform(
+forecast_data.loc[:, f_columns] = features_transformer_2.transform(
   forecast_data[f_columns].to_numpy()
 )
 
-en_transformer_2 = RobustScaler()
+energy_values_transformer_2 = RobustScaler()
 
 real_data_for_chart = forecast_data['energy_produced']
 
-en_transformer_2 = en_transformer_2.fit(forecast_data[['energy_produced']])
+energy_values_transformer_2 = energy_values_transformer_2.fit(forecast_data[['energy_produced']])
 
-forecast_data['energy_produced'] = en_transformer_2.transform(forecast_data[['energy_produced']])
+forecast_data['energy_produced'] = energy_values_transformer_2.transform(forecast_data[['energy_produced']])
 
 X_forecast, y_forecast = forecast_data.loc[:, f_columns].to_numpy(), forecast_data.loc[:, "energy_produced"].to_numpy()
 X_forecast = X_forecast.reshape((X_forecast.shape[0], X_forecast.shape[1], 1))
@@ -235,7 +206,7 @@ X_forecast = X_forecast.reshape((X_forecast.shape[0], X_forecast.shape[1], 1))
 print(X_forecast.shape)
 
 y_pred_forecast = model.predict(X_forecast)
-y_pred_forecast_inv = en_transformer_2.inverse_transform(y_pred_forecast)
+y_pred_forecast_inv = energy_values_transformer_2.inverse_transform(y_pred_forecast)
 
 print("Prognoza")
 print(y_pred_forecast_inv)
@@ -250,6 +221,10 @@ plt.ylabel("Energia wyprodukowana [kWh]")
 plt.title("Prognoza produkcji energii elektrycznej z instalacji PV w Wieliczce na kwiecień 2023")
 plt.legend()
 plt.show()
+
+print("Mean square error: " + str(mean_squared_error(real_data_for_chart, y_pred_forecast_inv)))
+print("Mean absolute error: " + str(mean_absolute_error(real_data_for_chart, y_pred_forecast_inv)))
+print("Root mean square error: " + str(sqrt(mean_squared_error(real_data_for_chart, y_pred_forecast_inv))))
 
 
 

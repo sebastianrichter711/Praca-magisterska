@@ -62,59 +62,35 @@ plt.title("Macierz korelacji")
 plt.show()
 
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
-'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
-'solarenergy', 'uvindex']
+'humidity', 'precip', 'precipprob', 'precipcover', 'sealevelpressure', 'cloudcover', 'solarradiation',
+'uvindex']
 
-f_transformer = RobustScaler()
+# f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
+# 'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
+# 'solarenergy', 'uvindex']
 
-f_transformer = f_transformer.fit(train[f_columns].to_numpy())
+features_transformer = RobustScaler()
 
-train.loc[:, f_columns] = f_transformer.transform(
+features_transformer = features_transformer.fit(train[f_columns].to_numpy())
+
+train.loc[:, f_columns] = features_transformer.transform(
   train[f_columns].to_numpy()
 )
 
-test.loc[:, f_columns] = f_transformer.transform(
+test.loc[:, f_columns] = features_transformer.transform(
   test[f_columns].to_numpy()
 )
 
-en_transformer = RobustScaler()
+energy_values_transformer = RobustScaler()
 
-en_transformer = en_transformer.fit(train[['energy_produced']])
+energy_values_transformer = energy_values_transformer.fit(train[['energy_produced']])
 
-train['energy_produced'] = en_transformer.transform(train[['energy_produced']])
+train['energy_produced'] = energy_values_transformer.transform(train[['energy_produced']])
 
-test['energy_produced'] = en_transformer.transform(test[['energy_produced']])
-
-# def create_dataset(X, y, time_steps=1):
-#     Xs, ys = [], []
-#     for i in range(len(X) - time_steps):
-#         v = X.iloc[i:(i + time_steps)].values
-#         Xs.append(v)
-#         ys.append(y.iloc[i + time_steps])
-#     return np.array(Xs), np.array(ys)
-
-# time_steps = 7
-
-# # reshape to [samples, time_steps, n_features]
-# print(train.head(10))
-# print(train.loc[:,["tempmax", "tempmin"]])
-
-# X_train, y_train = create_dataset(train.loc[:, f_columns], train.energy_produced, time_steps)
-# X_test, y_test = create_dataset(test.loc[:, f_columns], test.energy_produced, time_steps)
-
-# print(X_train.shape, y_train.shape)
+test['energy_produced'] = energy_values_transformer.transform(test[['energy_produced']])
 
 X_train, y_train = train.loc[:, f_columns].to_numpy(), train.loc[:, "energy_produced"].to_numpy()
 X_test, y_test = test.loc[:, f_columns].to_numpy(), test.loc[:, "energy_produced"].to_numpy()
-
-# print("Train")
-# print(train)
-# print("Test")
-# print(test)
-# print("Enrgia wyporduk")
-# print(y_train)
-# print("Enrgia wyporduk(test)")
-# print(y_test)
 
 X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
 X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
@@ -125,56 +101,21 @@ model = Sequential()
 
 # LSTM
 
-# model.add(
-#   Bidirectional(
-#     LSTM(
-#       units=128,
-#       input_shape=(X_train.shape[1], X_train.shape[2])
-#     )
-#   )
-# )
-
-# model.add(Dropout(rate=0.2))
-# model.add(Dense(units=1))
-
-# model.add(LSTM(units=500, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
-# model.add(Dropout(0.2))
-# model.add(LSTM(units=500, return_sequences=True))
-# model.add(Dropout(0.2))
-# model.add(LSTM(units=500))
-# model.add(Dropout(0.2))
-# model.add(Dense(units=1))
-
-# model.compile(loss='mean_squared_error', optimizer='adam')
-
-# history = model.fit(
-#     X_train, y_train,
-#     epochs=75,
-#     batch_size=32,
-#     validation_split=0.1,
-#     shuffle=False
-# )
-
 model.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1],X_train.shape[2])))
 model.add(Dropout(0.5))
-# Second LSTM layer
 model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.5))
-# Third LSTM layer
 model.add(LSTM(units=50, return_sequences=True))
 model.add(Dropout(0.5))
-# Fourth LSTM layer
 model.add(LSTM(units=50))
 model.add(Dropout(0.5))
-# The output layer
 model.add(Dense(units=1))
 
-# Compiling the RNN
 model.compile(optimizer='rmsprop',loss='mean_squared_error', metrics=['mse', 'mae', RootMeanSquaredError()])
-# Fitting to the training set
 history = model.fit(X_train,y_train,epochs=50,batch_size=32)
 
 plt.plot(history.history['loss'], label='strata')
+plt.title("Wykres funkcji straty")
 plt.legend()
 plt.show()
 
@@ -184,9 +125,9 @@ print("test loss:", acc)
 
 y_pred = model.predict(X_test)
 
-y_train_inv = en_transformer.inverse_transform(y_train.reshape(-1,1))
-y_test_inv = en_transformer.inverse_transform(y_test.reshape(-1,1))
-y_pred_inv = en_transformer.inverse_transform(y_pred)
+y_train_inv = energy_values_transformer.inverse_transform(y_train.reshape(-1,1))
+y_test_inv = energy_values_transformer.inverse_transform(y_test.reshape(-1,1))
+y_pred_inv = energy_values_transformer.inverse_transform(y_pred)
 
 fig, ax = plt.subplots()
 x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_test_dates]
@@ -216,10 +157,9 @@ plt.show()
 print("Mean square error: " + str(mean_squared_error(y_test_inv, y_pred_inv)))
 print("Mean absolute error: " + str(mean_absolute_error(y_test_inv, y_pred_inv)))
 print("Root mean square error: " + str(sqrt(mean_squared_error(y_test_inv, y_pred_inv))))
-print("Mean Absolute Percentage Error: " + str(mean_absolute_percentage_error(y_test_inv, y_pred_inv)))
 
 forecast_data = pd.read_csv(
-    "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast.csv")
+    "D:/Studia/Praca-magisterska/dane-z-PV/dane-do-badania/" + location + "-forecast-20.csv")
 
 list_of_forecast_dates = create_list_of_dates(forecast_data["datetime"])
 
@@ -235,24 +175,28 @@ print(forecast_data.info())
 print(len(forecast_data))
 
 f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
-'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
-'solarenergy', 'uvindex']
+'humidity', 'precip', 'precipprob', 'precipcover', 'sealevelpressure', 'cloudcover', 'solarradiation',
+'uvindex']
 
-f_transformer_2 = RobustScaler()
+# f_columns = ['tempmax', 'tempmin', 'temp', 'feelslikemax', 'feelslikemin', 'feelslike', 'dew',
+# 'humidity', 'precip', 'precipprob', 'precipcover', 'windgust', 'windspeed', 'winddir', 'sealevelpressure', 'cloudcover', 'visibility', 'solarradiation',
+# 'solarenergy', 'uvindex']
 
-f_transformer_2 = f_transformer_2.fit(forecast_data[f_columns].to_numpy())
+features_transformer_2 = RobustScaler()
 
-forecast_data.loc[:, f_columns] = f_transformer_2.transform(
+features_transformer_2 = features_transformer_2.fit(forecast_data[f_columns].to_numpy())
+
+forecast_data.loc[:, f_columns] = features_transformer_2.transform(
   forecast_data[f_columns].to_numpy()
 )
 
-en_transformer_2 = RobustScaler()
+energy_values_transformer_2 = RobustScaler()
 
 real_data_for_chart = forecast_data['energy_produced']
 
-en_transformer_2 = en_transformer_2.fit(forecast_data[['energy_produced']])
+energy_values_transformer_2 = energy_values_transformer_2.fit(forecast_data[['energy_produced']])
 
-forecast_data['energy_produced'] = en_transformer_2.transform(forecast_data[['energy_produced']])
+forecast_data['energy_produced'] = energy_values_transformer_2.transform(forecast_data[['energy_produced']])
 
 X_forecast, y_forecast = forecast_data.loc[:, f_columns].to_numpy(), forecast_data.loc[:, "energy_produced"].to_numpy()
 X_forecast = X_forecast.reshape((X_forecast.shape[0], 1, X_forecast.shape[1]))
@@ -260,7 +204,7 @@ X_forecast = X_forecast.reshape((X_forecast.shape[0], 1, X_forecast.shape[1]))
 print(X_forecast.shape)
 
 y_pred_forecast = model.predict(X_forecast)
-y_pred_forecast_inv = en_transformer_2.inverse_transform(y_pred_forecast)
+y_pred_forecast_inv = energy_values_transformer_2.inverse_transform(y_pred_forecast)
 
 print("Prognoza")
 print(y_pred_forecast_inv)
@@ -268,7 +212,7 @@ print(y_pred_forecast_inv)
 fig, ax = plt.subplots()
 x = [datetime.datetime(int(l[0]),int(l[1]),int(l[2])) for l in list_of_forecast_dates]
 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=10))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=5))
 plt.plot(x, real_data_for_chart, label='Dane rzeczywiste')
 plt.plot(x, y_pred_forecast_inv.flatten(), label='Prognoza')
 plt.ylabel("Energia wyprodukowana [kWh]")
@@ -276,6 +220,9 @@ plt.title("Prognoza produkcji energii elektrycznej z instalacji PV w Wieliczce n
 plt.legend()
 plt.show()
 
+print("Mean square error: " + str(mean_squared_error(real_data_for_chart, y_pred_forecast_inv)))
+print("Mean absolute error: " + str(mean_absolute_error(real_data_for_chart, y_pred_forecast_inv)))
+print("Root mean square error: " + str(sqrt(mean_squared_error(real_data_for_chart, y_pred_forecast_inv))))
 
 
 

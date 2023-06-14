@@ -22,7 +22,6 @@ data.pop("prcp")
 
 print(data.info())
 
-#data plot
 plt.plot(data["energy_produced"])
 plt.show()
 
@@ -63,7 +62,6 @@ def create_dataset(X, y, time_steps=1):
 
 time_steps = 24
 
-# reshape to [samples, time_steps, n_features]
 
 X_train, y_train = create_dataset(train, train.energy_produced, time_steps)
 X_test, y_test = create_dataset(test, test.energy_produced, time_steps)
@@ -71,18 +69,6 @@ X_test, y_test = create_dataset(test, test.energy_produced, time_steps)
 print(X_train.shape, y_train.shape)
 
 model = Sequential()
-
-# model.add(
-#   Bidirectional(
-#     LSTM(
-#       units=128,
-#       input_shape=(X_train.shape[1], X_train.shape[2])
-#     )
-#   )
-# )
-
-# model.add(Dropout(rate=0.2))
-# model.add(Dense(units=1))
 
 model.add(LSTM(units=128, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
 model.add(Dropout(0.2))

@@ -19,7 +19,6 @@ print(line)
 PV_rows = []
 with open('D:/Studia/Praca-magisterska/dane-z-PV/wieliczka/wieliczka-PV.txt') as f:
     PV_rows = f.readlines()
-    #print(PV_rows)
 
 PV_rows.pop(0)
 

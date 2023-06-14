@@ -29,8 +29,6 @@ for month in months:
     for day in days:
         for hour in hours:
             dir = rootdir + "/" + month + "/" + day + "/" + hour
-            #print("Katalog")
-            #print(dir)
             if path.exists(dir) == True:
                 for file in os.listdir(dir):
                     d = os.path.join(dir, file)
@@ -49,7 +47,6 @@ for month in months:
                     bindata = f.read()
                     data = bindata.decode('utf-8')
                     divided_data = data.split("\n")
-                    # print(divided_data)
 
                 for line in divided_data:
                     if divided_data.index(line) > 0:

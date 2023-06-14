@@ -23,21 +23,6 @@ inverters = [
 divided_data = []
 new_divided_data = []
 
-# Wyrzucenie folderów z nazwą inną niż solar_test
-# for month in months:
-#     for day in days:
-#         for hour in hours:
-#             dir = rootdir + "/" + month + "/" + day + "/" + hour
-#             #print("Katalog")
-#             #print(dir)
-#             if path.exists(dir) == True:
-#                 for file in os.listdir(dir):
-#                     d = os.path.join(dir, file)
-#                     if os.path.isdir(d):
-#                         if "solar_test" not in d:
-#                             print(d)
-#                             shutil.rmtree(d)
-
 for year in years:
     for month in months:
         for day in days:
@@ -50,7 +35,6 @@ for year in years:
                             bindata = f.read()
                             data = bindata.decode('utf-8')
                             divided_data = data.split("\n")
-                            # print(divided_data)
 
                         for line in divided_data:
                             if divided_data.index(line) > 0:

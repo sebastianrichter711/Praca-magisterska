@@ -1,8 +1,6 @@
-# Import Meteostat library and dependencies
 from datetime import datetime
 from meteostat import Point, Hourly, Daily
 
-# Set time period
 start = datetime(2022, 2, 28, 23, 00, 00)
 end = datetime(2023, 3, 13, 7, 59, 59)
 
@@ -12,7 +10,6 @@ longitude = 18.7069
 
 location = Point(latitude, longitude, None)
 
-# Get daily data for 2018
 data = Hourly(location, start, end)
 data = data.fetch()
 
@@ -25,7 +22,6 @@ longitude = 20.06473
 
 location = Point(latitude, longitude, None)
 
-# Get daily data for 2018
 start = datetime(2014, 6, 27, 00, 00, 00)
 end = datetime(2023, 4, 30, 00,00,00)
 data = Daily(location, start, end)

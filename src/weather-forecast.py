@@ -3,9 +3,6 @@ import os
 from datetime import datetime
 import tzlocal
 import csv
-#from dotenv import load_dotenv
-
-#load_dotenv()
 
 API_KEY = ""
 
@@ -22,7 +19,7 @@ data = req.json()
 
 for record in data["daily"]:
     ts=int(record["dt"])
-    local_timezone = tzlocal.get_localzone() # get pytz timezone
+    local_timezone = tzlocal.get_localzone() 
     local_time = datetime.fromtimestamp(ts, local_timezone)
     local_time_formatted = local_time.strftime('%Y-%m-%d %H:%M:%S')
     record["dt"] = local_time_formatted
