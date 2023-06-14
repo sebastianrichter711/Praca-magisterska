@@ -74,7 +74,7 @@ features_transformer = RobustScaler()
 
 features_transformer = features_transformer.fit(train[f_columns].to_numpy())
 
-train.loc[:, f_columns] = features_transformerr.transform(
+train.loc[:, f_columns] = features_transformer.transform(
   train[f_columns].to_numpy()
 )
 
@@ -122,7 +122,7 @@ optimizer = RMSprop(0.001)
 
 model.compile(loss='mse', optimizer=optimizer, metrics=['mse', 'mae', RootMeanSquaredError()])
 
-history = model.fit(X_train, y_train,epochs=500,batch_size=32)
+history = model.fit(X_train, y_train,epochs=50,batch_size=32)
 
 plt.plot(history.history['loss'], label='train')
 plt.title("Wykres funkcji straty")
