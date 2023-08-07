@@ -23,7 +23,7 @@ Predykcja produkcji energii elektrycznej z paneli fotowoltaicznych na podstawie 
 ## Technologie
 
 - Python 3.11.1
-- TensorFlow/Keras
+- TensorFlow (Keras)
 - IDE: Visual Studio Code
 - system kontroli wersji Git
 
@@ -56,7 +56,7 @@ Prediction of electricity generation from photovoltaic modules based on weather 
 ## Technologies
 
 - Python 3.11.1
-- TensorFlow/Keras
+- TensorFlow (Keras)
 - IDE: Visual Studio Code
 - Git version control system
 
